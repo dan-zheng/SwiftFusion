@@ -137,6 +137,16 @@ extension Pose3Coordinate: ManifoldCoordinate {
         return self * Pose3Coordinate(R, v)
     }
   }
+
+  @derivative(of: retract, wrt: local)
+  @usableFromInline
+  func jvpRetract(_ local: Vector6) -> (
+    value: Self,
+    differential: (Vector6.TangentVector) -> TangentVector
+  ) {
+    // Missing forward-mode control flow differentiation support.
+    fatalError()
+  }
   
   /// Log(p^{-1} * q)
   ///
@@ -156,6 +166,14 @@ extension Pose3Coordinate: ManifoldCoordinate {
     } else {
       return localBigRot(global)
     }
+  }
+
+  @derivative(of: localCoordinate, wrt: global)
+  public func jvpLocalCoordinate(_ global: Self) -> (
+    value: Vector6, differential: (TangentVector) -> Vector6
+  ) {
+    // Missing forward-mode control flow differentiation support.
+    fatalError()
   }
 
   /// Implements `local` in the small rotation case.

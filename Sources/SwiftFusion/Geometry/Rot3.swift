@@ -208,6 +208,16 @@ extension Matrix3Coordinate: ManifoldCoordinate {
     }
   }
 
+  @derivative(of: retract, wrt: local)
+  @usableFromInline
+  func jvpRetract(_ local: Vector3) -> (
+    value: Matrix3Coordinate,
+    differential: (Vector3.TangentVector) -> Matrix3Coordinate.TangentVector
+  ) {
+    // Missing forward-mode control flow differentiation support.
+    fatalError()
+  }
+
   @differentiable(wrt: global)
   public func localCoordinate(_ global: Matrix3Coordinate) -> Vector3 {
     let relative = self.inverse() * global
@@ -240,6 +250,16 @@ extension Matrix3Coordinate: ManifoldCoordinate {
         return magnitude * Vector3(R32 - R23, R13 - R31, R21 - R12)
       }
     }
+  }
+
+  @derivative(of: localCoordinate, wrt: global)
+  @usableFromInline
+  func jvpLocalCoordinate(_ global: Matrix3Coordinate) -> (
+    value: Vector3,
+    differential: (Matrix3Coordinate.TangentVector) -> Vector3.TangentVector
+  ) {
+    // Missing forward-mode control flow differentiation support.
+    fatalError()
   }
 
   /// Construct from Tensor

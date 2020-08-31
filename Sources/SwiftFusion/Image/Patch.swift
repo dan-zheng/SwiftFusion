@@ -151,6 +151,14 @@ extension Tensor where Scalar == Double {
     return self.shape.count == 2 ? result.reshaped(to: [region.rows, region.cols]) : result
   }
 
+  @derivative(of: patch, wrt: region)
+  public func jvpPatch(at region: OrientedBoundingBox) -> (
+    value: Tensor<Scalar>, differential: (OrientedBoundingBox.TangentVector) -> Tensor<Scalar>
+  ) {
+    // Missing forward-mode control flow differentiation support.
+    fatalError()
+  }
+
   /// Returns the patch of `self` at `region`, and its Jacobian with respect to the pose of the
   /// `region`.
   ///

@@ -158,6 +158,15 @@ extension Pose2Coordinate: ManifoldCoordinate {
       return self * Pose2Coordinate(R, t)
     }
   }
+
+  @derivative(of: retract, wrt: local)
+  @usableFromInline
+  func jvpRetract(_ local: Vector3) -> (
+    value: Self, differential: (Vector3.TangentVector) -> TangentVector
+  ) {
+    // Missing forward-mode control flow differentiation support.
+    fatalError()
+  }
   
   /// Log(p^{-1} * q)
   ///
@@ -183,6 +192,15 @@ extension Pose2Coordinate: ManifoldCoordinate {
       let v = Vector2((w / det) * p.x, (w / det) * p.y)
       return Vector3(w, v.x, v.y)
     }
+  }
+
+  @derivative(of: localCoordinate, wrt: global)
+  @usableFromInline
+  func jvpocalCoordinate(_ global: Self) -> (
+    value: Vector3, differential: (TangentVector) -> Vector3.TangentVector
+  ) {
+    // Missing forward-mode control flow differentiation support.
+    fatalError()
   }
 }
 

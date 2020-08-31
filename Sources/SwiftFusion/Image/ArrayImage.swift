@@ -54,6 +54,15 @@ public struct ArrayImage: Differentiable {
     self.channels = tensor.shape.count == 2 ? 1 : tensor.shape[2]
   }
 
+  @derivative(of: init(_:))
+  @usableFromInline
+  static func jvpInit(_ tensor: Tensor<Double>) -> (
+    value: Self, differential: (Tensor<Double>) -> TangentVector
+  ) {
+    // Missing forward-mode control flow differentiation support.
+    fatalError()
+  }
+
   /// Returns this image as an image `Tensor`.
   @differentiable
   public var tensor: Tensor<Double> {
