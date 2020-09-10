@@ -34,13 +34,19 @@ class PPCATrackingFactorTests: XCTestCase {
 
       // Below we compare custom and much faster differentiation with the autodiff version.
 
+      let forwardAutodiff = ForwardJacobianFactor<Array<ErrorVector>, Variables>(
+        linearizing: factor, at: linearizationPoint)
       let autodiff = JacobianFactor<Array<Variables>, ErrorVector>(
         linearizing: factor, at: linearizationPoint)
       let custom = factor.linearized(at: linearizationPoint)
 
+      // Notebook: takes 10-20 seconds instead of <1 second
       // Compare the linearizations at zero (the error vector).
       XCTAssertEqual(
         custom.errorVector(at: Variables.zero), autodiff.errorVector(at: Variables.zero))
+      XCTAssertEqual(
+        autodiff.errorVector(at: Variables.zero),
+        forwardAutodiff.errorVector(at: Variables.zero))
 
       // Compare the Jacobian-vector-products (forward derivative).
       for _ in 0..<10 {
@@ -48,6 +54,10 @@ class PPCATrackingFactorTests: XCTestCase {
         assertEqual(
           custom.errorVector_linearComponent(v).tensor,
           autodiff.errorVector_linearComponent(v).tensor,
+          accuracy: 1e-6)
+        assertEqual(
+          custom.errorVector_linearComponent(v).tensor,
+          forwardAutodiff.errorVector_linearComponent(v).tensor,
           accuracy: 1e-6)
       }
 
@@ -57,6 +67,10 @@ class PPCATrackingFactorTests: XCTestCase {
         assertEqual(
           custom.errorVector_linearComponent_adjoint(e).flatTensor,
           autodiff.errorVector_linearComponent_adjoint(e).flatTensor,
+          accuracy: 1e-6)
+        assertEqual(
+          custom.errorVector_linearComponent_adjoint(e).flatTensor,
+          forwardAutodiff.errorVector_linearComponent_adjoint(e).flatTensor,
           accuracy: 1e-6)
       }
     }

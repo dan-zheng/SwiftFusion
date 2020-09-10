@@ -95,8 +95,10 @@ extension TrappingDouble: BinaryFloatingPoint {
 extension TrappingDouble: ElementaryFunctions {}
 
 extension TrappingDouble: TensorFlowFloatingPoint {
+/*
   public var xlaScalarWrapper: XLAScalarWrapper { return value.xlaScalarWrapper }
   public static var xlaTensorScalarTypeRawValue: UInt32 { return Swift.Double.xlaTensorScalarTypeRawValue }
+*/
   @inlinable
   public static var tensorFlowDataType: TensorDataType { return Swift.Double.tensorFlowDataType }
 }

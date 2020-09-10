@@ -39,6 +39,11 @@ extension ArrayImage {
     return result
   }
 
+  // Reason why this exists:
+  // Control flow differentiation made it very slow, probably due to allocations
+  // To eliminate this: need faster derivatives for control flow
+  // Frank: we could express patch via convolution, which could enable faster derivative
+  // Patch is a custom building block. Most code uses patch to build up higher-level structures
   @derivative(of: patch, wrt: region)
   @usableFromInline
   func vjpPatch(at region: OrientedBoundingBox) -> (value: Self, pullback: (TangentVector) -> OrientedBoundingBox.TangentVector) {
@@ -68,6 +73,20 @@ extension ArrayImage {
       return dBox
     }
     return (r, outerPb)
+  }
+
+  @derivative(of: patch, wrt: region)
+  @usableFromInline
+  func jvpPatch(at region: OrientedBoundingBox) -> (
+    value: Self, differential: (OrientedBoundingBox.TangentVector) -> TangentVector
+  ) {
+    let (patch, jacobian) = patchWithJacobian(at: region)
+    return (patch, { v in
+      let (dtheta, du, dv) = jacobian
+      let tmp = dv * v.center.z
+      let dself = dtheta * v.center.x + du * v.center.y + tmp
+      return .init(pixels: .init(dself.pixels))
+    })
   }
 
   /// Returns the patch of `self` at `region`, and its Jacobian with respect to the center of the
@@ -138,7 +157,7 @@ extension Tensor where Scalar == Double {
   ///
   /// - Parameters:
   ///   - self: a tensor of image pixels with shape `[height, width]` or
-  ///           [height, width, channelCount]`. `height` and `width` are as defined in
+  ///           `[height, width, channelCount]`. `height` and `width` are as defined in
   ///           `docs/ImageOperations.md`.
   ///   - region: the center, orientation, and size of the patch to extract.
   @differentiable(wrt: region)
@@ -151,12 +170,28 @@ extension Tensor where Scalar == Double {
     return self.shape.count == 2 ? result.reshaped(to: [region.rows, region.cols]) : result
   }
 
+  // Note: this exists as a workaround for missing forward-mode control flow differentiation support.
   @derivative(of: patch, wrt: region)
   public func jvpPatch(at region: OrientedBoundingBox) -> (
     value: Tensor<Scalar>, differential: (OrientedBoundingBox.TangentVector) -> Tensor<Scalar>
   ) {
-    // Missing forward-mode control flow differentiation support.
-    fatalError()
+    var (result, df) = valueWithDifferential(at: region) { region in
+      ArrayImage(self).patch(at: region).tensor
+    }
+    let condition = self.shape.count == 2
+    if condition {
+      let (result2, df2) = valueWithDifferential(at: result) { result in
+        result.reshaped(to: [region.rows, region.cols])
+      }
+      result = result2
+      df = { x in df2(df(x)) }
+    }
+    return (result, df)
+    // Note: implementation below is wrong.
+    /*
+    let (patch, jacobian) = patchWithJacobian(at: region)
+    return (patch, { _ in jacobian })
+    */
   }
 
   /// Returns the patch of `self` at `region`, and its Jacobian with respect to the pose of the

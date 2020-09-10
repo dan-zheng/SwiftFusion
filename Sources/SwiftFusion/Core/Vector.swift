@@ -259,6 +259,14 @@ extension Vector {
   {
     return (self.flatTensor, { Self(flatTensor: $0) })
   }
+
+  @derivative(of: flatTensor)
+  @usableFromInline
+  func jvpFlatTensor() -> (value: Tensor<Double>, differential: (Self) -> Tensor<Double>)
+    where Self: ScalarsInitializableVector
+  {
+    return (self.flatTensor, { $0.flatTensor })
+  }
 }
 
 /// Conversion from `Tensor`.

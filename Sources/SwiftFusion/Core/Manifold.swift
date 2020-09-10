@@ -47,7 +47,7 @@ public protocol Manifold: Differentiable {
   /// Note: The distinction between `coordinateStorage` and `coordinate` is a workaround until we
   /// can define default derivatives for protocol requirements (TF-982). Until then, implementers
   /// of this protocol must define `coordinateStorage`, and clients of this protocol must access
-  /// coordinate`. This allows us to define default derivatives for `coordinate` that translate
+  /// `coordinate`. This allows us to define default derivatives for `coordinate` that translate
   /// between the `ManifoldCoordinate` tangent space and the `Manifold` tangent space.
   var coordinateStorage: Coordinate { get set }
 
@@ -56,7 +56,7 @@ public protocol Manifold: Differentiable {
   /// Note: The distinction between `init(coordinateStorage:)` and `init(coordinate:)` is a workaround until we
   /// can define default derivatives for protocol requirements (TF-982). Until then, implementers
   /// of this protocol must define `init(coordinateStorage:)`, and clients of this protocol must access
-  /// init(coordinate:)`. This allows us to define default derivatives for `init(coordinate:)` that translate
+  /// `init(coordinate:)`. This allows us to define default derivatives for `init(coordinate:)` that translate
   /// between the `ManifoldCoordinate` tangent space and the `Manifold` tangent space.
   init(coordinateStorage: Coordinate)
 }

@@ -110,6 +110,17 @@ public struct Tensor10x10: AdditiveArithmetic, FixedShapeTensor {
     precondition(tensor.shape == Self.shape)
     self.scalars = Scalars(storage: tensor)
   }
+
+  // Note: this custom JVP function exists as a workaround for forward-mode differentiation issues.
+  // Remove it when forward-mode differentiation issues (SR-13530) are fixed.
+  @derivative(of: init)
+  @usableFromInline
+  static func _jvpInit(_ tensor: Tensor<Double>) -> (
+    value: Self, differential: (Tensor<Double>) -> TangentVector
+  ) {
+    let value = Self(tensor)
+    return (value, { dtensor in .init(.init(dtensor)) })
+  }
 }
 
 /// A `Tensor` with shape `[28, 62, 1]`.
@@ -148,5 +159,19 @@ public struct Tensor28x62x1: AdditiveArithmetic, FixedShapeTensor {
   public init(_ tensor: Tensor<Double>) {
     precondition(tensor.shape == Self.shape)
     self.scalars = Scalars(storage: tensor)
+  }
+
+  // Note: this custom JVP function exists as a workaround for forward-mode differentiation issues.
+  // Remove it when forward-mode differentiation issues (SR-13530) are fixed.
+  @derivative(of: init)
+  @usableFromInline
+  static func _jvpInit(_ tensor: Tensor<Double>) -> (
+    value: Self, differential: (Tensor<Double>) -> TangentVector
+  ) {
+    let value = Self(tensor)
+    return (value, { dtensor in
+      assert(dtensor.shape == Self.shape)
+      return .init(.init(dtensor))
+    })
   }
 }

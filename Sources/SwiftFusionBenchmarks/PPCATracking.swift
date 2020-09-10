@@ -14,6 +14,7 @@
 
 import Benchmark
 import SwiftFusion
+import PenguinStructures
 import TensorFlow
 
 let ppcaTrackingBenchmark = BenchmarkSuite(name: "PPCATracking") { suite in
@@ -51,6 +52,44 @@ let ppcaTrackingBenchmark = BenchmarkSuite(name: "PPCATracking") { suite in
       var optimizer = GenericCGLS()
       var dx = x.tangentVectorZeros
       optimizer.optimize(gfg: gfg, initial: &dx)
+    }
+  }
+
+  let factor = PPCATrackingFactor.testFixture(TypedID<Pose2>(0), TypedID<Vector5>(0), seed: (4, 4))
+
+  let linearizationPoint = Tuple2(
+    Pose2(randomWithCovariance: eye(rowCount: 3), seed: (5, 5)),
+    Vector5(flatTensor: Tensor(randomNormal: [5], seed: (6, 6))))
+
+  typealias Variables = PPCATrackingFactor.Variables.TangentVector
+  typealias ErrorVector = PPCATrackingFactor.ErrorVector
+
+  suite.benchmark(
+    "forward-mode Jacobian",
+    settings: TimeUnit(.ms)
+  ) { state in
+    try state.measure {
+      let forwardAutodiff = ForwardJacobianFactor<Array<ErrorVector>, Variables>(
+        linearizing: factor, at: linearizationPoint)
+    }
+  }
+
+  suite.benchmark(
+    "custom forward-mode Jacobian",
+    settings: TimeUnit(.ms)
+  ) { state in
+    try state.measure {
+      let custom = factor.linearized(at: linearizationPoint)
+    }
+  }
+
+  suite.benchmark(
+    "reverse-mode Jacobian",
+    settings: TimeUnit(.ms)
+  ) { state in
+    try state.measure {
+      let autodiff = JacobianFactor<Array<Variables>, ErrorVector>(
+        linearizing: factor, at: linearizationPoint)
     }
   }
 }

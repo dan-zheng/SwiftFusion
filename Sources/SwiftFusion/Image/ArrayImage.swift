@@ -59,8 +59,11 @@ public struct ArrayImage: Differentiable {
   static func jvpInit(_ tensor: Tensor<Double>) -> (
     value: Self, differential: (Tensor<Double>) -> TangentVector
   ) {
-    // Missing forward-mode control flow differentiation support.
-    fatalError()
+    let value = Self(tensor)
+    func differential(_ dtensor: Tensor<Double>) -> TangentVector {
+      .init(pixels: .init(dtensor.scalars))
+    }
+    return (value, differential)
   }
 
   /// Returns this image as an image `Tensor`.
@@ -114,6 +117,18 @@ public struct ArrayImage: Differentiable {
       return v.pixels.base[idx]
     }
     return ((), pullback)
+  }
+
+  static func +(lhs: Self, rhs: Self) -> Self {
+    var result = lhs
+    result.pixels = zip(lhs.pixels, rhs.pixels).map { $0 + $1 }
+    return result
+  }
+
+  static func *(lhs: Self, rhs: Double) -> Self {
+    var result = lhs
+    result.pixels = result.pixels.map { $0 * rhs }
+    return result
   }
 }
 
